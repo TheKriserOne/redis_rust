@@ -54,17 +54,17 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
             .map(|mut stream| {
                 tokio::spawn(async move {
                     loop {
-                        let mut buffer = [0; 1024]; // Buffer to read data
+                        let mut buffer: Vec<u8> = Vec::with_capacity(1024); // Buffer to read data
                         while let Ok(n) = stream.read(&mut buffer).await {
-
                             stream
                                 .write_all(b"+PONG\r\n")
                                 .await
                                 .expect("Failed to write PONG response");
-                            let received = String::from_utf8_lossy(&buffer[..n]);
+                            let received = String::from_utf8(Vec::from(&buffer[..n])).unwrap();
                             println!("Received: {}", received);
 
                         }
+
                     }
                 });
             })
