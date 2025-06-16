@@ -54,7 +54,7 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
             .map(|mut stream| {
                 tokio::spawn(async move {
                     loop {
-                        let mut buffer = Vec::with_capacity(1024);
+                        let mut buffer = [0; 1024]; // Buffer to read data
                         while let Ok(n) = stream.read(&mut buffer).await {
 
                             stream
@@ -63,7 +63,7 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                                 .expect("Failed to write PONG response");
                             let received = String::from_utf8_lossy(&buffer[..n]);
                             println!("Received: {}", received);
-                            buffer.clear(); // Clear the buffer for the next read
+
                         }
                     }
                 });
