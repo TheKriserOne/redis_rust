@@ -34,7 +34,6 @@ async fn listen(
     handles: Arc<Mutex<Vec<TcpStream>>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     while let Some(Ok(mut stream)) = listener.next().await {
-        stream.write_all(b"Connected").await?;
         let mut handles = handles.lock().await;
         handles.push(stream);
     }
