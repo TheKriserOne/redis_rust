@@ -1,5 +1,5 @@
 use std::sync::{Arc, Weak};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::join;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
@@ -54,9 +54,14 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
             .map(|mut stream| {
                 tokio::spawn(async move {
                     loop {
-                        if let Err(_) = stream.write_all(b"+PONG\r\n").await {
-                            println!("Error writing to socket, closing connection.");
-                            return;
+                        let mut buffer = [0; 1024];
+                        while let Ok(n) = stream.read(&mut buffer).await {
+                            if n == 0 {
+                                // Connection closed
+                                return;
+                            }
+                            let received = String::from_utf8_lossy(&buffer[..n]);
+                            println!("Received: {}", received);
                         }
                         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                     }
