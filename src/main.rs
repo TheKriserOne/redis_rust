@@ -56,14 +56,13 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                     loop {
                         let mut buffer = [0; 1024];
                         while let Ok(n) = stream.read(&mut buffer).await {
-                            if n == 0 {
-                                // Connection closed
-                                return;
-                            }
-                            let received = String::from_utf8_lossy(&buffer[..n]);
+                            stream
+                                .write_all(b"+PONG\r\n")
+                                .await
+                                .expect("Failed to write PONG response");
+                            let received = String::from_utf8_lossy(&buffer[..]);
                             println!("Received: {}", received);
                         }
-                        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                     }
                 });
             })
