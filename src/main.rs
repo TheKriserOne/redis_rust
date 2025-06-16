@@ -55,7 +55,8 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                 tokio::spawn(async move {
                     loop {
                         let mut buffer = Vec::with_capacity(1024);
-                        while let Ok(n) = stream.read_to_end(&mut buffer).await {
+                        while let Ok(n) = stream.read(&mut buffer).await {
+
                             stream
                                 .write_all(b"+PONG\r\n")
                                 .await
