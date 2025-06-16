@@ -61,8 +61,9 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                                 .write_all(b"+PONG\r\n")
                                 .await
                                 .expect("Failed to write PONG response");
-                            let received = String::from_utf8_lossy(&buffer[..]);
+                            let received = String::from_utf8_lossy(&buffer[..n]);
                             println!("Received: {}", received);
+
                         }
                     }
                 });
