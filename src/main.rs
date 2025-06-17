@@ -1,5 +1,6 @@
 mod parser;
 
+use std::collections::HashMap;
 use crate::parser::RESPtypes;
 use std::sync::{Arc, Weak};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -9,6 +10,7 @@ use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tokio_stream::wrappers::TcpListenerStream;
 use tokio_stream::{wrappers, StreamExt};
+use crate::parser::RESPtypes::BulkStrings;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,13 +25,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     Ok(())
 
-    // Spawn a new task for each connection
-    // tokio::spawn(async move {
-    //     // Send PONG response
-    //     if let Err(e) = socket.write_all(b"+PONG\r\n").await {
-    //         println!("Error writing to socket: {}", e);
-    //     }
-    // });
 }
 
 async fn listen(
@@ -56,6 +51,7 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
             .into_iter()
             .map(|mut stream| {
                 tokio::spawn(async move {
+                    let mut data: HashMap<String, String> = HashMap::new();
                     loop {
 
                         let mut buffer = vec![0u8; 1024]; // Buffer to read data
@@ -84,7 +80,23 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                                                 .await
                                                 .expect("Failed to write PONG response");
                                         }
+                                        else if s == "SET" {
+                                            data.insert(val.next().unwrap().to_resp_string(), val.next().unwrap().to_resp_string());
+                                            stream.write_all(b"+OK\r\n").await.expect("TODO: panic message");
+                                        }
+                                        else if s == "GET" {
+                                            if let Some(BulkStrings(query)) = val.next() {
 
+                                                match data.get(query) {
+                                                    Some(val) => {
+                                                        stream.write_all(BulkStrings(val.clone()).to_resp_string().as_ref()).await.expect("TODO: panic message");
+                                                    }
+                                                    None => {
+                                                        stream.write_all(b"$-1\r\n").await.expect("TODO: panic message");
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                                 _ => {
