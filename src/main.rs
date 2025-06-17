@@ -82,6 +82,7 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                                         }
                                         else if s == "SET" {
                                             data.insert(val.next().unwrap().to_resp_string(), val.next().unwrap().to_resp_string());
+                                            println!("{:?}", data);
                                             stream.write_all(b"+OK\r\n").await.expect("TODO: panic message");
                                         }
                                         else if s == "GET" {
