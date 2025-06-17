@@ -4,6 +4,7 @@ use std::vec::IntoIter;
 pub enum RESPtypes {
     BulkStrings(String),
     Arrays(Vec<RESPtypes>),
+    SimpleString(String)
 }
 
 impl RESPtypes {
@@ -25,6 +26,9 @@ impl RESPtypes {
             } else if val.chars().nth(0) == Option::from('$') {
                 return Self::BulkStrings(String::from(tokens.next().unwrap()));
             }
+            else if val.chars().nth(0) == Option::from('+') {
+                return Self::SimpleString(String::from(tokens.next().unwrap()));
+            }
         }
         Self::BulkStrings(String::from("non"))
     }
@@ -36,16 +40,8 @@ impl RESPtypes {
                     initial + &*current.to_resp_string()
                 })
             }
+            RESPtypes::SimpleString(val) => format!("+{}\r\n", val)
         }
     }
-    pub fn to_string(&self) -> String {
-        match &self {
-            RESPtypes::BulkStrings(val) => val.to_owned(),
-            RESPtypes::Arrays(val) => {
-                val.iter().fold("".to_string(), |initial, current| {
-                    initial + &*current.to_string() + " "
-                })
-            }
-        }
-    }
+
 }
