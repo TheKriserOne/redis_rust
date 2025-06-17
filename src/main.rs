@@ -86,11 +86,11 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                                             stream.write_all(b"+OK\r\n").await.expect("TODO: panic message");
                                         }
                                         else if s == "GET" {
-                                            if let Some(BulkStrings(query)) = val.next() {
+                                            if let Some(query) = val.next() {
 
-                                                match data.get(query) {
+                                                match data.get(&query.to_resp_string()) {
                                                     Some(val) => {
-                                                        stream.write_all(BulkStrings(val.clone()).to_resp_string().as_ref()).await.expect("TODO: panic message");
+                                                        stream.write_all(val.as_ref()).await.expect("TODO: panic message");
                                                     }
                                                     None => {
                                                         stream.write_all(b"$-1\r\n").await.expect("TODO: panic message");
