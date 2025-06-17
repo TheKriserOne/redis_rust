@@ -32,6 +32,13 @@ impl RESPtypes {
         }
         Self::BulkStrings(String::from("non"))
     }
+    pub fn get(&self) -> String {
+        match &self {
+            RESPtypes::BulkStrings(val) => format!("{}" val),
+            RESPtypes::SimpleString(val) => format!("{}", val),
+            _ => String::from("no")
+        }
+    }
     pub fn to_resp_string(&self) -> String {
         match &self {
             RESPtypes::BulkStrings(val) => format!("${}\r\n{}\r\n", val.len(), val),

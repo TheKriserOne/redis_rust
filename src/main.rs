@@ -10,7 +10,7 @@ use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tokio_stream::wrappers::TcpListenerStream;
 use tokio_stream::{wrappers, StreamExt};
-use crate::parser::RESPtypes::BulkStrings;
+use crate::parser::RESPtypes::{Arrays, BulkStrings};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -61,10 +61,10 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                             let parsed = RESPtypes::from_string(&received);
 
                             match parsed {
-                                RESPtypes::Arrays(val) => {
+                                Arrays(val) => {
 
                                     let mut val = val.iter();
-                                    if let Some(RESPtypes::BulkStrings(s)) = val.next() {
+                                    if let Some(BulkStrings(s)) = val.next() {
 
                                         if s == "ECHO" {
                                             stream
@@ -81,16 +81,16 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                                                 .expect("Failed to write PONG response");
                                         }
                                         else if s == "SET" {
-                                            data.insert(val.next().unwrap().to_resp_string(), val.next().unwrap().to_resp_string());
+                                            data.insert(val.next().unwrap().get(), val.next().unwrap().get());
                                             println!("{:?}", data);
                                             stream.write_all(b"+OK\r\n").await.expect("TODO: panic message");
                                         }
                                         else if s == "GET" {
-                                            if let Some(query) = val.next() {
+                                            if let Some(BulkStrings(query)) = val.next() {
 
-                                                match data.get(&query.to_resp_string()) {
+                                                match data.get(query) {
                                                     Some(val) => {
-                                                        stream.write_all(val.as_ref()).await.expect("TODO: panic message");
+                                                        stream.write_all(BulkStrings(val.clone()).to_resp_string().as_ref()).await.expect("TODO: panic message");
                                                     }
                                                     None => {
                                                         stream.write_all(b"$-1\r\n").await.expect("TODO: panic message");
