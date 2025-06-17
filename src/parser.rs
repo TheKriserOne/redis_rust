@@ -34,8 +34,7 @@ impl RESPtypes {
     }
     pub fn get(&self) -> String {
         match &self {
-            RESPtypes::BulkStrings(val) => format!("{}" val),
-            RESPtypes::SimpleString(val) => format!("{}", val),
+            RESPtypes::BulkStrings(val) | RESPtypes::SimpleString(val) => val.to_string(),
             _ => String::from("no")
         }
     }
