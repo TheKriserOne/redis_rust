@@ -31,7 +31,7 @@ async fn listen(
     mut listener: TcpListenerStream,
     handles: Arc<Mutex<Vec<TcpStream>>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    while let Some(Ok(mut stream)) = listener.next().await {
+    while let Some(Ok(stream)) = listener.next().await {
         let mut handles = handles.lock().await;
         handles.push(stream);
     }
@@ -82,7 +82,6 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
                                         }
                                         else if s == "SET" {
                                             data.insert(val.next().unwrap().get(), val.next().unwrap().get());
-                                            println!("{:?}", data);
                                             stream.write_all(b"+OK\r\n").await.expect("TODO: panic message");
                                         }
                                         else if s == "GET" {
@@ -114,10 +113,4 @@ async fn stream_connection(handles: Arc<Mutex<Vec<TcpStream>>>) {
             .collect();
     }
 }
-// async fn send_pong(socket: &mut TcpStream) -> JoinHandle<()> {
-//     tokio::spawn(async move {
-//         if let Err(e) = socket.write_all(b"+PONG\r\n").await {
-//             println!("Error writing to socket: {}", e);
-//         }
-//     })
-// }
+
